@@ -7,74 +7,54 @@ let rec index_of_end_paren exp index depth =
         | _ -> index_of_end_paren exp (index + 1) depth
     end else -1
 
-let map fn ls =
-    let rec map_helper ls nls = match ls with
-    | [] -> List.rev nls
-    | (hd :: rs) -> map_helper rs (fn hd :: nls) in
-    map_helper ls []
+let grab_an_exp exp i =
+    index_of_end_paren exp i 1
 
-let grab_an_exp exp =
-    let end_paren = index_of_end_paren exp 1 1 in
-    print_int end_paren;
-    print_endline exp;
-    let an_exp = String.trim (String.sub exp 0 end_paren) in
-    let rest_end = String.length exp - end_paren - 1 in
-    (an_exp, end_paren + 1, rest_end)
+let grab_a_lit exp i =
+    try String.index_from exp i ' '
+    with Not_found -> String.length exp
 
-let grab_a_lit exp =
-    let end_lit =
-        try String.index exp ' '
-        with Not_found -> String.length exp in
-    print_int end_lit;
-    print_endline exp;
-    let a_lit = String.trim (String.sub exp 0 end_lit) in
-    let rest_end = String.length exp - end_lit - 1 in
-    (a_lit, end_lit + 1, rest_end)
+let grab_which exp =
+    match exp.[0] with
+    | '(' -> grab_an_exp
+    | _ -> grab_a_lit
 
 let grab_next exp =
     let exp = String.trim exp in
-    match exp.[0] with
-    | '(' -> grab_an_exp exp
-    | _ -> grab_a_lit exp
+    let rec grab_next_helper f e i a =
+        if i < String.length e
+        then List.rev a
+        else let cdr_index = f e i in
+        let car = String.trim (String.sub e i cdr_index) in
+        grab_next_helper f e (cdr_index + 1) (car :: a) in
+    let f = grab_which exp in
+    let res = grab_next_helper f exp 0 [] in
+    print_endline (String.concat " " res);
+    res
 
-let apply car cdr =
+let is_exp exp = (exp.[0] = '(')
+
+let apply car (cdr : string list) =
     match car with
-    | "quote" -> String.concat " " cdr
+    | "+" -> string_of_int (List.fold_left (+) 0 (List.map int_of_string cdr))
     | _ -> car
 
-let rec eval_args args e_args =
-    match args with
-    | "" -> let re_args = List.rev e_args in begin
-        match re_args with
-        | [] -> ""
-        | (car :: cdr) -> eval_exp car cdr
-    end
-    | exp -> let (an_exp, rest_index, rest_len) =
-        grab_next exp in
-    let e_exp = eval_exp an_exp [] in
-    let rest =
-        try String.sub exp rest_index rest_len
-        with _ -> "" in
-    eval_args rest (e_exp :: e_args)
+let rec enter_exp car =
+    let car = String.trim car in
+    let exp = (String.sub car 1 (String.length car - 2)) in
+    eval exp
 
-and eval_exp car cdr : string =
-    let car =
-        if car.[0] = '('
+and eval exp =
+    match grab_next exp with
+    | [] -> ""
+    | car :: cdr -> let car =
+        if is_exp car
         then enter_exp car
         else car in
-    print_endline car;
     apply car cdr
 
-and enter_exp exp =
-    print_endline exp;
-    let the_exp = String.sub exp 1 (String.length exp - 2) in
-    let (the_exp, rest_index, rest_len) = grab_next the_exp in
-    the_exp
+let test = "+ 1 1"
 
-let eval exp =
-    eval_args exp []
-
-let test = "(quote (bar (tool bar)) ((catz)) kidd)";;
-
-print_endline test;;
-eval test
+let () = 
+    print_endline test;
+    print_endline (eval test)

@@ -2,7 +2,7 @@ LIBS = str
 
 LFLAGS = -libs $(LIBS)
 
-ML = src/ocamlisp
+ML = src/olisp
 
 ocamurl: $(ML).ml
 	ocamlbuild $(LFLAGS) $(CFLAGS) $(ML).native
