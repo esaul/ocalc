@@ -7,21 +7,17 @@ let rec index_of_end_paren exp index depth = if depth = 0 then index
     else -1
 
 let is_exp exp = (exp.[0] = '(')
-
 let grab_inner_exp exp = let e = String.trim exp in
     String.sub e 1 (String.length e - 2)
 
 let split_exp e i =
     let cdr = try String.sub e i (String.length e - i) with _ -> "" in
     let car = try String.sub e 0 i with _ -> "" in (String.trim car, String.trim cdr)
-
 let separate_lit exp =
     try let i = (String.index exp ' ') + 1 in split_exp exp i with _ -> (exp, "")
-
 let separate_exp exp = let i = index_of_end_paren exp 1 1 in split_exp exp i
 
 (* Environment *)
-
 module Env = Map.Make(String);;
 let env = ref Env.empty
 
@@ -41,7 +37,7 @@ let rec apply car (cdr : string list) = if car = "let"
     | "<=" -> bool_op ( <= ) cdr | ">=" -> bool_op ( >= ) cdr
     | ">" -> bool_op ( > ) cdr | "<" -> bool_op ( < ) cdr
     | "=" -> bool_op ( = ) cdr | "<>" -> bool_op ( <> ) cdr
-    | "if" -> if_op cdr | _ -> Env.find car !env
+    | "if" -> if_op cdr | _ -> print_endline "error, proc not supported"; exit 0
 
 and grab_exp exp = let inner_exp = grab_inner_exp exp in
     let rec helper exp args = match exp with
