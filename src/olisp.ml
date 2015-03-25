@@ -1,7 +1,6 @@
-let rec index_of_end_paren exp index depth =
-    if depth = 0 then index
-    else if index < String.length exp then
-        match exp.[index] with
+(* Parsing *)
+let rec index_of_end_paren exp index depth = if depth = 0 then index
+    else if index < String.length exp then match exp.[index] with
         | '(' -> index_of_end_paren exp (index + 1) (depth + 1)
         | ')' -> index_of_end_paren exp (index + 1) (depth - 1)
         | _ -> index_of_end_paren exp (index + 1) depth
@@ -9,91 +8,48 @@ let rec index_of_end_paren exp index depth =
 
 let is_exp exp = (exp.[0] = '(')
 
-let grab_inner_exp exp =
-    let e = String.trim exp in
+let grab_inner_exp exp = let e = String.trim exp in
     String.sub e 1 (String.length e - 2)
 
 let split_exp e i =
-    let cdr =
-        try String.sub e i (String.length e - i)
-        with _ -> "" in
-    let car =
-        try String.sub e 0 i
-        with _ -> "" in
-    (String.trim car, String.trim cdr)
+    let cdr = try String.sub e i (String.length e - i) with _ -> "" in
+    let car = try String.sub e 0 i with _ -> "" in (String.trim car, String.trim cdr)
 
 let separate_lit exp =
-    try let i = (String.index exp ' ') + 1 in
-        split_exp exp i
-    with _ -> (exp, "")
+    try let i = (String.index exp ' ') + 1 in split_exp exp i with _ -> (exp, "")
 
-let separate_exp exp =
-    let i = index_of_end_paren exp 1 1 in
-    split_exp exp i
+let separate_exp exp = let i = index_of_end_paren exp 1 1 in split_exp exp i
 
-let int_op_n op args =
-    let i_args = (List.map int_of_string args) in
-    match i_args with
-    | (car :: cdr) -> string_of_int (List.fold_left op car cdr)
-    | _ -> print_endline "Runtime error."; exit 0
+(* Environment *)
 
-let bool_op op args =
-    let i_args = (List.map int_of_string args) in
-    match List.length i_args with
-    | 2 -> string_of_bool (op (List.nth i_args 0) (List.nth i_args 1))
-    | _ -> print_endline "Runtime error: invalid number of arguments to bool op."; exit 0
+module Env = Map.Make(String);;
+let env = ref Env.empty
 
-let if_op args =
-    match List.length args with
-    | 3 ->
-        if (List.nth args 0) = "true"
-        then (List.nth args 1)
-        else (List.nth args 2)
-    | _ -> print_endline "Runtime error: invalid number of arguments to \"if\"."; exit 0
+let to_exp args = ("(" ^ (String.concat " " args) ^ ")")
+let rec to_olisp_val v = try int_of_string v with _ -> to_olisp_val (Env.find v !env)
 
-let apply car (cdr : string list) =
+let int_op_n op args = string_of_int (List.fold_left op (List.hd args) (List.tl args))
+let bool_op op args = if op (List.nth args 0) (List.nth args 1) then "1" else "0"
+let if_op args = string_of_int (if (List.nth args 0) = 1 then (List.nth args 1) else (List.nth args 2))
+let let_op args = env := Env.add (List.hd args) (List.nth args 1) !env; List.nth args 1
+
+let rec apply car (cdr : string list) = if car = "let"
+    then let_op cdr else let cdr = (List.map to_olisp_val cdr) in
     match car with
-    | "+" -> int_op_n ( + ) cdr
-    | "-" -> int_op_n ( - ) cdr
-    | "*" -> int_op_n ( * ) cdr
-    | "/" -> int_op_n ( / ) cdr
-    | ">" -> bool_op ( > ) cdr
-    | "<" -> bool_op ( < ) cdr
-    | "if" -> if_op cdr
-    | _ -> car
+    | "+" -> int_op_n ( + ) cdr | "-" -> int_op_n ( - ) cdr
+    | "*" -> int_op_n ( * ) cdr | "/" -> int_op_n ( / ) cdr
+    | "<=" -> bool_op ( <= ) cdr | ">=" -> bool_op ( >= ) cdr
+    | ">" -> bool_op ( > ) cdr | "<" -> bool_op ( < ) cdr
+    | "=" -> bool_op ( = ) cdr | "<>" -> bool_op ( <> ) cdr
+    | "if" -> if_op cdr | _ -> Env.find car !env
 
-let rec grab_exp exp =
-    let inner_exp = grab_inner_exp exp in
-    let rec helper exp args =
-        match exp with
+and grab_exp exp = let inner_exp = grab_inner_exp exp in
+    let rec helper exp args = match exp with
         | "" -> List.rev args
-        | _ -> let (car, cdr) =
-            if is_exp exp
+        | _ -> let (car, cdr) = if is_exp exp
             then let (car, cdr) = separate_exp exp in (eval car, cdr)
             else separate_lit exp in
-        helper cdr (car :: args) in
-    helper inner_exp []
+        helper cdr (car :: args) in helper inner_exp []
 
-and eval exp =
-    if is_exp exp then
-        match grab_exp exp with
-        | [] -> ""
-        | car :: cdr -> apply car cdr
-    else exp
-
-let tests = [
-    ("(+ 1 (+ 1 3))", "5");
-    ("(- 3 2)", "1");
-    ("(/ (- 8 2) 3)", "2");
-    ("(* 9 (+ 3 5))", "72");
-    ("(+ (if (< 2 3) 1 2) (if (> 4 5) 2 9) 72)", "82")
-]
-
-let rec run_tests tests = 
-    match tests with
-    | [] -> ()
-    | ((test, answer) :: rem_tests) ->
-        print_endline test;
-        print_endline ((eval test) ^ " === " ^ answer ^ "\n");
-        run_tests rem_tests;;
-run_tests tests
+and eval exp = if is_exp exp then match grab_exp exp with
+        | [] -> "" | car :: cdr -> apply car cdr else exp
