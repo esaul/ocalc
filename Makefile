@@ -1,4 +1,4 @@
-ML = src/olisp
+ML = src/ocalc
 
 all: $(ML).ml
 	ocamlbuild $(ML).native

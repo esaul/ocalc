@@ -7,30 +7,25 @@ let rec index_of_end_paren exp index depth = if depth = 0 then index
     else -1
 
 let is_exp exp = (exp.[0] = '(')
+
 let grab_inner_exp exp = let e = String.trim exp in
     String.sub e 1 (String.length e - 2)
 
 let split_exp e i =
     let cdr = try String.sub e i (String.length e - i) with _ -> "" in
     let car = try String.sub e 0 i with _ -> "" in (String.trim car, String.trim cdr)
+
 let separate_lit exp =
     try let i = (String.index exp ' ') + 1 in split_exp exp i with _ -> (exp, "")
+
 let separate_exp exp = let i = index_of_end_paren exp 1 1 in split_exp exp i
 
 (* Environment *)
-module Env = Map.Make(String);;
-let env = ref Env.empty
-
-let to_exp args = ("(" ^ (String.concat " " args) ^ ")")
-let rec to_olisp_val v = try int_of_string v with _ -> to_olisp_val (Env.find v !env)
-
 let int_op_n op args = string_of_int (List.fold_left op (List.hd args) (List.tl args))
 let bool_op op args = if op (List.nth args 0) (List.nth args 1) then "1" else "0"
 let if_op args = string_of_int (if (List.nth args 0) = 1 then (List.nth args 1) else (List.nth args 2))
-let let_op args = env := Env.add (List.hd args) (List.nth args 1) !env; List.nth args 1
 
-let rec apply car (cdr : string list) = if car = "let"
-    then let_op cdr else let cdr = (List.map to_olisp_val cdr) in
+let rec apply car (cdr : string list) = let cdr = (List.map int_of_string cdr) in
     match car with
     | "+" -> int_op_n ( + ) cdr | "-" -> int_op_n ( - ) cdr
     | "*" -> int_op_n ( * ) cdr | "/" -> int_op_n ( / ) cdr
