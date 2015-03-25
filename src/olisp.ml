@@ -37,12 +37,29 @@ let int_op_n op args =
     | (car :: cdr) -> string_of_int (List.fold_left op car cdr)
     | _ -> print_endline "Runtime error."; exit 0
 
+let bool_op op args =
+    let i_args = (List.map int_of_string args) in
+    match List.length i_args with
+    | 2 -> string_of_bool (op (List.nth i_args 0) (List.nth i_args 1))
+    | _ -> print_endline "Runtime error: invalid number of arguments to bool op."; exit 0
+
+let if_op args =
+    match List.length args with
+    | 3 ->
+        if (List.nth args 0) = "true"
+        then (List.nth args 1)
+        else (List.nth args 2)
+    | _ -> print_endline "Runtime error: invalid number of arguments to \"if\"."; exit 0
+
 let apply car (cdr : string list) =
     match car with
     | "+" -> int_op_n ( + ) cdr
     | "-" -> int_op_n ( - ) cdr
     | "*" -> int_op_n ( * ) cdr
     | "/" -> int_op_n ( / ) cdr
+    | ">" -> bool_op ( > ) cdr
+    | "<" -> bool_op ( < ) cdr
+    | "if" -> if_op cdr
     | _ -> car
 
 let rec grab_exp exp =
@@ -68,7 +85,8 @@ let tests = [
     ("(+ 1 (+ 1 3))", "5");
     ("(- 3 2)", "1");
     ("(/ (- 8 2) 3)", "2");
-    ("(* 9 (+ 3 5))", "72")
+    ("(* 9 (+ 3 5))", "72");
+    ("(+ (if (< 2 3) 1 2) (if (> 4 5) 2 9) 72)", "82")
 ]
 
 let rec run_tests tests = 
