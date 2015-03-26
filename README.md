@@ -1,7 +1,7 @@
 Ocalc
 =======
 
-Ocalc is a simple lispy calculator written in < 50 lines of OCaml. This was originally intended to be a super small self-hosting lisp/scheme interpreter modelled after lispy by Peter Norvig. However, I think that may be troublesome due to how I am evaluated the tail of the list.
+Ocalc is a simple lispy calculator written in < 50 lines of OCaml. This was originally intended to be a super small, self-hosting lisp/scheme interpreter modelled after lispy by Peter Norvig. However, I think that may be troublesome due to how I am evaluating the tail of a list.
 
 So, I decided to just release the calculator version on its own for now because there will probably need to be major changes before I can get a lisp/scheme working.
 
