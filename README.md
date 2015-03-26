@@ -57,11 +57,6 @@ Support
 If you are having issues, please let us know.
 Email me at me@eatonphil.com
 
-Acknowledgements
-----------------
-
-[ivg](http://stackoverflow.com/users/2625442/ivg) on Stackoverflow for helping me debug my sockets. 
-
 License
 -------
 
