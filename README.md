@@ -47,6 +47,9 @@ Features
 --------
 
 - No Core/Batteries dependencies
+- Functions
+  - +, -, *, /, <, >, <=, >=, =, <>
+  - if
 
 Support
 -------
