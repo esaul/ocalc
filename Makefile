@@ -1,10 +1,12 @@
 ML = src/ocalc
 
+LFLAGS = -libs nums
+
 all: $(ML).ml
-	ocamlbuild $(ML).native
+	ocamlbuild $(LFLAGS) $(ML).native
 
 test: 
-	ocamlbuild -I src tests/tests.native 
+	ocamlbuild $(LFLAGS) -I src tests/tests.native 
 
 clean:
 	rm -rf _build *.native *.byte

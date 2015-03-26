@@ -21,17 +21,18 @@ let separate_lit exp =
 let separate_exp exp = let i = index_of_end_paren exp 1 1 in split_exp exp i
 
 (* Environment *)
-let int_op_n op args = string_of_int (List.fold_left op (List.hd args) (List.tl args))
+let int_op_n op args = Num.string_of_num (List.fold_left op (List.hd args) (List.tl args))
 let bool_op op args = if op (List.nth args 0) (List.nth args 1) then "1" else "0"
-let if_op args = string_of_int (if (List.nth args 0) = 1 then (List.nth args 1) else (List.nth args 2))
+let if_op args = Num.string_of_num
+    (if Num.(=/) (List.nth args 0) (Num.num_of_int 1) then (List.nth args 1) else (List.nth args 2))
 
-let rec apply car (cdr : string list) = let cdr = (List.map int_of_string cdr) in
-    match car with
-    | "+" -> int_op_n ( + ) cdr | "-" -> int_op_n ( - ) cdr
-    | "*" -> int_op_n ( * ) cdr | "/" -> int_op_n ( / ) cdr
-    | "<=" -> bool_op ( <= ) cdr | ">=" -> bool_op ( >= ) cdr
-    | ">" -> bool_op ( > ) cdr | "<" -> bool_op ( < ) cdr
-    | "=" -> bool_op ( = ) cdr | "<>" -> bool_op ( <> ) cdr
+let rec apply car (cdr : string list) =
+    let cdr = (List.map Num.num_of_string cdr) in match car with
+    | "+" -> int_op_n Num.( +/ ) cdr | "-" -> int_op_n Num.( -/ ) cdr
+    | "*" -> int_op_n Num.( */ ) cdr | "/" -> int_op_n Num.( // ) cdr
+    | "<=" -> bool_op Num.( <=/ ) cdr | ">=" -> bool_op Num.( >=/ ) cdr
+    | ">" -> bool_op Num.( >/ ) cdr | "<" -> bool_op Num.( </ ) cdr
+    | "=" -> bool_op Num.( =/ ) cdr | "<>" -> bool_op Num.( <>/ ) cdr
     | "if" -> if_op cdr
     | _ -> print_endline "error, proc not supported"; exit 0
 
