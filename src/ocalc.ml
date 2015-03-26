@@ -32,7 +32,8 @@ let rec apply car (cdr : string list) = let cdr = (List.map int_of_string cdr) i
     | "<=" -> bool_op ( <= ) cdr | ">=" -> bool_op ( >= ) cdr
     | ">" -> bool_op ( > ) cdr | "<" -> bool_op ( < ) cdr
     | "=" -> bool_op ( = ) cdr | "<>" -> bool_op ( <> ) cdr
-    | "if" -> if_op cdr | _ -> print_endline "error, proc not supported"; exit 0
+    | "if" -> if_op cdr
+    | _ -> print_endline "error, proc not supported"; exit 0
 
 and grab_exp exp = let inner_exp = grab_inner_exp exp in
     let rec helper exp args = match exp with
@@ -40,7 +41,9 @@ and grab_exp exp = let inner_exp = grab_inner_exp exp in
         | _ -> let (car, cdr) = if is_exp exp
             then let (car, cdr) = separate_exp exp in (eval car, cdr)
             else separate_lit exp in
-        helper cdr (car :: args) in helper inner_exp []
+        helper cdr (car :: args) in
+    helper inner_exp []
 
 and eval exp = if is_exp exp then match grab_exp exp with
-        | [] -> "" | car :: cdr -> apply car cdr else exp
+    | [] -> ""
+    | car :: cdr -> apply car cdr else exp
